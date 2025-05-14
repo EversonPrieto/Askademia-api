@@ -11,9 +11,11 @@
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^6.7.0",
+    "cors": "^2.8.5",
     "express": "^5.1.0"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.18",
     "@types/express": "^5.0.1",
     "@types/node": "^22.15.15",
     "prisma": "^6.7.0",
