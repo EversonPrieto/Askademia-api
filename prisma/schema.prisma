@@ -15,11 +15,41 @@ datasource db {
 
 model Usuario {
   id        Int      @id @default(autoincrement())
-  nome      String?
-  email     String?  @unique
-  senha     String?
+  nome      String
+  email     String  @unique
+  senha     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  Pergunta Pergunta[]
+  Resposta Resposta[]
   
   @@map("usuarios")
+}
+
+model Pergunta {
+  id         Int       @id @default(autoincrement())
+  titulo     String
+  descricao  String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  usuarioId  Int
+  usuario    Usuario   @relation(fields: [usuarioId], references: [id])
+  respostas  Resposta[]
+
+  @@map("perguntas")
+}
+
+model Resposta {
+  id         Int       @id @default(autoincrement())
+  descricao  String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  perguntaId Int
+  pergunta   Pergunta  @relation(fields: [perguntaId], references: [id], onDelete: Cascade)
+  usuarioId  Int
+  usuario    Usuario   @relation(fields: [usuarioId], references: [id])
+
+  @@map("respostas")
 }
