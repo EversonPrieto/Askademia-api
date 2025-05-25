@@ -32,6 +32,6 @@ Esse comando cria as tabelas conforme definidas no schema do Prisma.
 
 ## `npm run dev`
 Inicia a aplicação em modo de desenvolvimento.
-Abra [http://localhost:3000](http://localhost:3000) para visualizá-la no navegador.
+Abra [http://localhost:3004](http://localhost:3004) para visualizá-la no navegador.
 
 A aplicação será recarregada automaticamente sempre que você fizer alterações no código.
