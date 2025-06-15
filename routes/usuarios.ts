@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, TipoUsuario } from "@prisma/client";
 import { Router } from "express";
 import bcrypt from 'bcrypt';
 
@@ -166,6 +166,59 @@ router.delete("/:id", async (req, res) => {
     res.status(200).json(usuario);
   } catch (error) {
     res.status(400).json({ error: "Erro ao deletar usuário" });
+  }
+});
+
+router.get("/checaMonitor/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: Number(id) },
+      select: {
+        tipo: true 
+      }
+    });
+
+    // Se o usuário não for encontrado, OU se o tipo não for MONITOR NEM PROFESSOR, retorna false
+    if (!usuario || (usuario.tipo !== TipoUsuario.MONITOR && usuario.tipo !== TipoUsuario.PROFESSOR)) {
+      res.status(200).json(false);
+      return 
+    }
+
+    // Se o tipo for MONITOR ou PROFESSOR, retorna true
+    res.status(200).json(true);
+
+  } catch (error) {
+    console.error("Erro ao checar monitor:", error);
+    res.status(400).json({ error: "Erro ao verificar status de monitor." });
+  }
+});
+
+// CHECK 2: Checa se o usuário é um PROFESSOR (permissão de nível mais alto)
+router.get("/checaProfessor/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: Number(id) },
+      select: {
+        tipo: true 
+      }
+    });
+
+    // Se o usuário não for encontrado, ou se o tipo não for PROFESSOR, retorna false
+    if (!usuario || usuario.tipo !== TipoUsuario.PROFESSOR) {
+      res.status(200).json(false);
+      return 
+    }
+
+    // Se o tipo for PROFESSOR, retorna true
+    res.status(200).json(true);
+
+  } catch (error) {
+    console.error("Erro ao checar professor:", error);
+    res.status(400).json({ error: "Erro ao verificar status de professor." });
   }
 });
 
