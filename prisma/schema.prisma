@@ -13,11 +13,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum TipoUsuario {
+  ALUNO     
+  MONITOR  
+  PROFESSOR 
+}
+
 model Usuario {
   id        Int      @id @default(autoincrement())
   nome      String
   email     String  @unique
   senha     String
+  tipo      TipoUsuario @default(ALUNO)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -52,4 +59,14 @@ model Resposta {
   usuario    Usuario   @relation(fields: [usuarioId], references: [id])
 
   @@map("respostas")
+}
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  senha     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admins") // Mapeia para uma tabela chamada 'admins' no banco de dados
 }
