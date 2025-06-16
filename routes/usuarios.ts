@@ -127,6 +127,27 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+router.patch("/:id/tipo", async (req, res) => {
+  const { id } = req.params;
+  const { tipo } = req.body; // Esperamos receber { "tipo": "MONITOR" } por exemplo
+
+  // Validação: Verifica se o tipo enviado é um dos valores válidos do Enum
+  if (!tipo || !Object.values(TipoUsuario).includes(tipo)) {
+    res.status(400).json({ erro: "Tipo de usuário inválido fornecido." })
+    return;
+  }
+
+  try {
+    const usuarioAtualizado = await prisma.usuario.update({
+      where: { id: Number(id) },
+      data: { tipo: tipo }, // Atualiza apenas o campo 'tipo'
+    });
+    res.status(200).json(usuarioAtualizado);
+  } catch (error) {
+    res.status(400).json({ error: "Erro ao atualizar o tipo do usuário." });
+  }
+});
+
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
   const { nome, email, senha } = req.body;
