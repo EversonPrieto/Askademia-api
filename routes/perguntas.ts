@@ -17,18 +17,28 @@ router.post("/", async (req, res) => {
   }
 });
 
+
 router.get("/", async (req, res) => {
   try {
     const perguntas = await prisma.pergunta.findMany({
+      orderBy: {
+        createdAt: 'desc',
+      },
       include: {
-        usuario: true,
+        usuario: true, 
         respostas: {
-          include: { usuario: true }
+          orderBy: {
+            createdAt: 'asc',
+          },
+          include: {
+            usuario: true, 
+          },
         },
       },
     });
     res.json(perguntas);
   } catch (error) {
+    console.error("Erro detalhado ao buscar perguntas:", error); 
     res.status(500).json({ error: "Erro ao buscar perguntas." });
   }
 });

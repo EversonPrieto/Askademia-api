@@ -6,7 +6,6 @@ import jwt from 'jsonwebtoken';
 const prisma = new PrismaClient();
 const router = Router();
 
-// Função para validar a complexidade da senha (mesma da rota de usuários)
 function validaSenha(senha: string) {
   const mensagens: string[] = [];
 
@@ -38,7 +37,6 @@ function validaSenha(senha: string) {
   return mensagens;
 }
 
-// ROTA: Criar um novo Admin
 router.post("/", async (req, res) => {
   const { nome, senha } = req.body;
 
@@ -59,7 +57,6 @@ router.post("/", async (req, res) => {
   try {
     const admin = await prisma.admin.create({
       data: { nome, senha: hash },
-      // Seleciona os campos a serem retornados, excluindo a senha
       select: {
         id: true,
         nome: true,
@@ -69,12 +66,10 @@ router.post("/", async (req, res) => {
     });
     res.status(201).json(admin);
   } catch (error) {
-    // Trata erro de nome duplicado
     res.status(400).json({ error: "Erro ao criar admin. O nome já pode estar em uso." });
   }
 });
 
-// ROTA: Login do Admin
 router.post("/login", async (req, res) => {
   const { nome, senha } = req.body;
   const mensagemPadrao = "Nome de usuário ou senha incorretos";
@@ -95,17 +90,17 @@ router.post("/login", async (req, res) => {
     }
 
     if (bcrypt.compareSync(senha, admin.senha)) {
-      // GERA O TOKEN AQUI!
+
       const token = jwt.sign(
-        { id: admin.id, nome: admin.nome }, // Dados que vão dentro do token
-        process.env.JWT_SECRET as string,       // Chave secreta
-        { expiresIn: "1h" }                    // Expira em 1 hora
+        { id: admin.id, nome: admin.nome },
+        process.env.JWT_SECRET as string,
+        { expiresIn: "1h" }
       );
 
       res.status(200).json({
         id: admin.id,
         nome: admin.nome,
-        token: token  // <--- ENVIA O TOKEN NA RESPOSTA
+        token: token 
       });
 
     } else {
@@ -116,7 +111,6 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// ROTA: Listar todos os Admins (sem a senha)
 router.get("/", async (req, res) => {
   try {
     const admins = await prisma.admin.findMany({
@@ -132,18 +126,15 @@ router.get("/", async (req, res) => {
   }
 });
 
-// ROTA: Atualizar um Admin (nome e/ou senha)
 router.put("/:id", async (req, res) => {
   const id = Number(req.params.id);
   const { nome, senha } = req.body;
 
-  // Verifica se pelo menos um campo foi enviado para atualização
   if (!nome && !senha) {
     res.status(400).json({ erro: "Informe o nome ou a senha para atualizar." })
     return;
   }
 
-  // Prepara o objeto de dados para atualização
   const dataToUpdate: { nome?: string; senha?: string } = {};
 
   if (nome) {
@@ -176,7 +167,6 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// ROTA: Deletar um Admin
 router.delete("/:id", async (req, res) => {
   const id = Number(req.params.id);
 
@@ -184,7 +174,7 @@ router.delete("/:id", async (req, res) => {
     await prisma.admin.delete({
       where: { id }
     });
-    res.status(204).send(); // Sucesso, sem conteúdo para retornar
+    res.status(204).send();
   } catch (error) {
     res.status(400).json({ error: "Erro ao deletar admin. O ID pode não existir." });
   }
