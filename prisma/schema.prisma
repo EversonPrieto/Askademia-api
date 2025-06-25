@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -34,6 +31,17 @@ model Usuario {
   @@map("usuarios")
 }
 
+model Disciplina {
+  id        Int      @id @default(autoincrement())
+  nome      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  perguntas Pergunta[]
+
+  @@map("disciplinas")
+}
+
 model Pergunta {
   id         Int       @id @default(autoincrement())
   titulo     String
@@ -44,6 +52,9 @@ model Pergunta {
   usuarioId  Int
   usuario    Usuario   @relation(fields: [usuarioId], references: [id])
   respostas  Resposta[]
+
+  disciplinaId Int
+  disciplina   Disciplina @relation(fields: [disciplinaId], references: [id])
 
   @@map("perguntas")
 }
@@ -68,5 +79,5 @@ model Admin {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@map("admins") // Mapeia para uma tabela chamada 'admins' no banco de dados
+  @@map("admins")
 }

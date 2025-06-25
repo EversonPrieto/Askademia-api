@@ -5,18 +5,28 @@ const prisma = new PrismaClient();
 const router = Router();
 
 router.post("/", async (req, res) => {
-  const { titulo, descricao, usuarioId } = req.body;
+
+  const { titulo, descricao, usuarioId, disciplinaId } = req.body;
+
+  if (!titulo || !usuarioId || !disciplinaId) {
+     res.status(400).json({ erro: "Título, ID do usuário e ID da disciplina são obrigatórios." })
+     return;
+  }
 
   try {
     const pergunta = await prisma.pergunta.create({
-      data: { titulo, descricao, usuarioId },
+      data: {
+        titulo,
+        descricao: descricao || "",
+        usuarioId,
+        disciplinaId
+      },
     });
     res.status(201).json(pergunta);
   } catch (error) {
-    res.status(400).json({ error: "Erro ao criar pergunta." });
+    res.status(400).json({ error: "Erro ao criar pergunta. Verifique os dados fornecidos." });
   }
 });
-
 
 router.get("/", async (req, res) => {
   try {

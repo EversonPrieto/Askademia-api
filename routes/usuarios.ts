@@ -129,9 +129,8 @@ router.get("/:id", async (req, res) => {
 
 router.patch("/:id/tipo", async (req, res) => {
   const { id } = req.params;
-  const { tipo } = req.body; // Esperamos receber { "tipo": "MONITOR" } por exemplo
+  const { tipo } = req.body;
 
-  // Validação: Verifica se o tipo enviado é um dos valores válidos do Enum
   if (!tipo || !Object.values(TipoUsuario).includes(tipo)) {
     res.status(400).json({ erro: "Tipo de usuário inválido fornecido." })
     return;
@@ -140,7 +139,7 @@ router.patch("/:id/tipo", async (req, res) => {
   try {
     const usuarioAtualizado = await prisma.usuario.update({
       where: { id: Number(id) },
-      data: { tipo: tipo }, // Atualiza apenas o campo 'tipo'
+      data: { tipo: tipo },
     });
     res.status(200).json(usuarioAtualizado);
   } catch (error) {
@@ -201,13 +200,11 @@ router.get("/checaMonitor/:id", async (req, res) => {
       }
     });
 
-    // Se o usuário não for encontrado, OU se o tipo não for MONITOR NEM PROFESSOR, retorna false
     if (!usuario || (usuario.tipo !== TipoUsuario.MONITOR && usuario.tipo !== TipoUsuario.PROFESSOR)) {
       res.status(200).json(false);
       return 
     }
 
-    // Se o tipo for MONITOR ou PROFESSOR, retorna true
     res.status(200).json(true);
 
   } catch (error) {
@@ -216,7 +213,6 @@ router.get("/checaMonitor/:id", async (req, res) => {
   }
 });
 
-// CHECK 2: Checa se o usuário é um PROFESSOR (permissão de nível mais alto)
 router.get("/checaProfessor/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -228,13 +224,11 @@ router.get("/checaProfessor/:id", async (req, res) => {
       }
     });
 
-    // Se o usuário não for encontrado, ou se o tipo não for PROFESSOR, retorna false
     if (!usuario || usuario.tipo !== TipoUsuario.PROFESSOR) {
       res.status(200).json(false);
       return 
     }
 
-    // Se o tipo for PROFESSOR, retorna true
     res.status(200).json(true);
 
   } catch (error) {
