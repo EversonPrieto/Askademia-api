@@ -42,8 +42,8 @@ router.get("/:id", async (req, res) => {
       where: { id },
     });
     if (!disciplina) {
-    res.status(404).json({ error: "Disciplina não encontrada." })
-    return;
+      res.status(404).json({ error: "Disciplina não encontrada." })
+      return;
     }
     res.json(disciplina);
   } catch (error) {
@@ -86,19 +86,23 @@ router.delete("/:id", async (req, res) => {
 
 router.get("/:id/perguntas", async (req, res) => {
   const disciplinaId = Number(req.params.id);
-  
+
   try {
     const perguntas = await prisma.pergunta.findMany({
       where: {
         disciplinaId: disciplinaId,
       },
       include: {
-        usuario: true, 
+        usuario: true,
         respostas: {
           include: {
             usuario: true,
+            likes: true,
+            _count: {
+              select: { likes: true }
+            }
           },
-        },
+        }
       },
       orderBy: {
         createdAt: 'desc'

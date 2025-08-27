@@ -41,7 +41,11 @@ router.get("/", async (req, res) => {
             createdAt: 'asc',
           },
           include: {
-            usuario: true, 
+            usuario: true,
+            likes: true,
+            _count: {
+              select: { likes: true } 
+            }
           },
         },
       },
@@ -61,15 +65,24 @@ router.get("/:id", async (req, res) => {
       include: {
         usuario: true,
         respostas: {
-          include: { usuario: true }
+          include: { 
+            usuario: true,
+            // MODIFICAÇÃO AQUI TAMBÉM: Inclui os likes e a contagem
+            likes: true,
+             _count: {
+              select: { likes: true }
+            }
+          }
         },
       },
     });
-    if (!pergunta) 
-        res.status(404).json({ error: "Pergunta não encontrada." });
-        res.json(pergunta);
+    if (!pergunta) {
+      res.status(404).json({ error: "Pergunta não encontrada." });
+    } else { // Adicionado um else para evitar enviar duas respostas
+      res.json(pergunta);
+    }
   } catch (error) {
-        res.status(500).json({ error: "Erro ao buscar pergunta." });
+    res.status(500).json({ error: "Erro ao buscar pergunta." });
   }
 });
 
