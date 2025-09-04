@@ -1,35 +1,66 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
+import upload from '../config/cloudinary';
 
 const prisma = new PrismaClient();
 const router = Router();
 
-router.post("/", async (req, res) => {
+
+router.post("/", upload.single('imagem'), async (req, res) => { // <-- 2. ADICIONE O MIDDLEWARE AQUI
   const { descricao, perguntaId, usuarioId } = req.body;
+  
+  // 3. CAPTURE A URL DA IMAGEM
+  const imagemUrl = req.file?.path;
+
+  // Validação
+  if (!descricao || !perguntaId || !usuarioId) {
+    res.status(400).json({ error: "Descrição, ID da pergunta e ID do usuário são obrigatórios." });
+    return; 
+  }
 
   try {
     const resposta = await prisma.resposta.create({
-      data: { descricao, perguntaId, usuarioId },
+      data: {
+        descricao,
+        // 4. CONVERTA OS IDs PARA NÚMEROS e adicione a imagemUrl
+        perguntaId: Number(perguntaId),
+        usuarioId: Number(usuarioId),
+        imagemUrl: imagemUrl, // <-- 5. SALVE A URL NO BANCO
+      },
     });
     res.status(201).json(resposta);
   } catch (error) {
-    res.status(400).json({ error: "Erro ao criar resposta." });
+    console.error("Erro ao criar resposta:", error);
+    res.status(400).json({ error: "Erro ao criar resposta. Verifique os dados fornecidos." });
   }
 });
 
-router.get("/", async (req, res) => {
-  try {
-    const respostas = await prisma.resposta.findMany({
-      include: {
-        usuario: true,
-        pergunta: true,
-      },
-    });
-    res.json(respostas);
-  } catch (error) {
-    res.status(500).json({ error: "Erro ao buscar respostas." });
-  }
-});
+// router.post("/", async (req, res) => {
+//   const { descricao, perguntaId, usuarioId } = req.body;
+
+//   try {
+//     const resposta = await prisma.resposta.create({
+//       data: { descricao, perguntaId, usuarioId },
+//     });
+//     res.status(201).json(resposta);
+//   } catch (error) {
+//     res.status(400).json({ error: "Erro ao criar resposta." });
+//   }
+// });
+
+// router.get("/", async (req, res) => {
+//   try {
+//     const respostas = await prisma.resposta.findMany({
+//       include: {
+//         usuario: true,
+//         pergunta: true,
+//       },
+//     });
+//     res.json(respostas);
+//   } catch (error) {
+//     res.status(500).json({ error: "Erro ao buscar respostas." });
+//   }
+// });
 
 router.get("/:id", async (req, res) => {
   const id = Number(req.params.id);

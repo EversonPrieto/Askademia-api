@@ -1,12 +1,13 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
+import upload from '../config/cloudinary'; 
 
 const prisma = new PrismaClient();
 const router = Router();
 
-router.post("/", async (req, res) => {
-
+router.post("/", upload.single('imagem'), async (req, res) => {
   const { titulo, descricao, usuarioId, disciplinaId } = req.body;
+  const imagemUrl = req.file?.path;
 
   if (!titulo || !usuarioId || !disciplinaId) {
      res.status(400).json({ erro: "Título, ID do usuário e ID da disciplina são obrigatórios." })
@@ -18,15 +19,41 @@ router.post("/", async (req, res) => {
       data: {
         titulo,
         descricao: descricao || "",
-        usuarioId,
-        disciplinaId
+        usuarioId: Number(usuarioId),
+        disciplinaId: Number(disciplinaId),
+        imagemUrl: imagemUrl,
       },
     });
     res.status(201).json(pergunta);
   } catch (error) {
+    console.error("Erro ao criar pergunta:", error);
     res.status(400).json({ error: "Erro ao criar pergunta. Verifique os dados fornecidos." });
   }
 });
+
+// router.post("/", async (req, res) => {
+
+//   const { titulo, descricao, usuarioId, disciplinaId } = req.body;
+
+//   if (!titulo || !usuarioId || !disciplinaId) {
+//      res.status(400).json({ erro: "Título, ID do usuário e ID da disciplina são obrigatórios." })
+//      return;
+//   }
+
+//   try {
+//     const pergunta = await prisma.pergunta.create({
+//       data: {
+//         titulo,
+//         descricao: descricao || "",
+//         usuarioId,
+//         disciplinaId
+//       },
+//     });
+//     res.status(201).json(pergunta);
+//   } catch (error) {
+//     res.status(400).json({ error: "Erro ao criar pergunta. Verifique os dados fornecidos." });
+//   }
+// });
 
 router.get("/", async (req, res) => {
   try {

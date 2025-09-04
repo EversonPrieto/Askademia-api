@@ -47,8 +47,10 @@ model Pergunta {
   id           Int        @id @default(autoincrement())
   titulo       String
   descricao    String
+  imagemUrl    String? 
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+  
   usuarioId    Int
   usuario      Usuario    @relation(fields: [usuarioId], references: [id])
   respostas    Resposta[]
@@ -61,13 +63,15 @@ model Pergunta {
 model Resposta {
   id         Int      @id @default(autoincrement())
   descricao  String
+  imagemUrl  String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  
   perguntaId Int
   pergunta   Pergunta @relation(fields: [perguntaId], references: [id], onDelete: Cascade)
   usuarioId  Int
   usuario    Usuario  @relation(fields: [usuarioId], references: [id])
-  likes      Like[] // Relação para saber todos os likes que a resposta recebeu
+  likes      Like[]
 
   @@map("respostas")
 }
