@@ -27,7 +27,7 @@ model Usuario {
 
   Pergunta Pergunta[]
   Resposta Resposta[]
-  likes    Like[] // Relação para saber quais likes o usuário deu
+  likes    Like[] 
 
   @@map("usuarios")
 }
@@ -76,20 +76,16 @@ model Resposta {
   @@map("respostas")
 }
 
-// NOVO MODELO PARA LIKES
 model Like {
   id         Int      @id @default(autoincrement())
   createdAt  DateTime @default(now())
 
-  // Relação com o usuário que deu o like
   usuarioId  Int
   usuario    Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
-  // Relação com a resposta que recebeu o like
   respostaId Int
   resposta   Resposta @relation(fields: [respostaId], references: [id], onDelete: Cascade)
 
-  // Garante que um usuário só pode dar like uma vez em uma mesma resposta
   @@unique([usuarioId, respostaId])
   @@map("likes")
 }

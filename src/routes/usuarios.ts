@@ -95,7 +95,8 @@ router.post("/login", async (req, res) => {
       res.status(200).json({
         id: usuario.id,
         nome: usuario.nome,
-        email: usuario.email
+        email: usuario.email,
+        tipo: usuario.tipo
       });
     } else {
       res.status(400).json({ erro: mensagemPadrao });
@@ -236,5 +237,36 @@ router.get("/checaProfessor/:id", async (req, res) => {
     res.status(400).json({ error: "Erro ao verificar status de professor." });
   }
 });
+
+router.get("/:id/perguntas", async (req, res) => {
+  const usuarioId = Number(req.params.id);
+
+  try {
+    const perguntas = await prisma.pergunta.findMany({
+      where: {
+        usuarioId: usuarioId,
+      },
+      orderBy: {
+        createdAt: 'desc', // Mostra as mais recentes primeiro
+      },
+      include: {
+        disciplina: { // Inclui o nome da disciplina para o link no frontend
+          select: {
+            nome: true,
+          }
+        },
+        _count: { // Conta quantas respostas cada pergunta tem
+          select: {
+            respostas: true
+          }
+        }
+      }
+    });
+    res.status(200).json(perguntas);
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao buscar as perguntas do usuário." });
+  }
+});
+
 
 export default router;
