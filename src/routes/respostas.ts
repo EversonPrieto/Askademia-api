@@ -6,13 +6,10 @@ const prisma = new PrismaClient();
 const router = Router();
 
 
-router.post("/", upload.single('imagem'), async (req, res) => { // <-- 2. ADICIONE O MIDDLEWARE AQUI
+router.post("/", upload.single('imagem'), async (req, res) => {
   const { descricao, perguntaId, usuarioId } = req.body;
-  
-  // 3. CAPTURE A URL DA IMAGEM
   const imagemUrl = req.file?.path;
 
-  // Validação
   if (!descricao || !perguntaId || !usuarioId) {
     res.status(400).json({ error: "Descrição, ID da pergunta e ID do usuário são obrigatórios." });
     return; 
@@ -22,10 +19,9 @@ router.post("/", upload.single('imagem'), async (req, res) => { // <-- 2. ADICIO
     const resposta = await prisma.resposta.create({
       data: {
         descricao,
-        // 4. CONVERTA OS IDs PARA NÚMEROS e adicione a imagemUrl
         perguntaId: Number(perguntaId),
         usuarioId: Number(usuarioId),
-        imagemUrl: imagemUrl, // <-- 5. SALVE A URL NO BANCO
+        imagemUrl: imagemUrl,
       },
     });
     res.status(201).json(resposta);
@@ -35,52 +31,33 @@ router.post("/", upload.single('imagem'), async (req, res) => { // <-- 2. ADICIO
   }
 });
 
-// router.post("/", async (req, res) => {
-//   const { descricao, perguntaId, usuarioId } = req.body;
-
-//   try {
-//     const resposta = await prisma.resposta.create({
-//       data: { descricao, perguntaId, usuarioId },
-//     });
-//     res.status(201).json(resposta);
-//   } catch (error) {
-//     res.status(400).json({ error: "Erro ao criar resposta." });
-//   }
-// });
-
-// router.get("/", async (req, res) => {
-//   try {
-//     const respostas = await prisma.resposta.findMany({
-//       include: {
-//         usuario: true,
-//         pergunta: true,
-//       },
-//     });
-//     res.json(respostas);
-//   } catch (error) {
-//     res.status(500).json({ error: "Erro ao buscar respostas." });
-//   }
-// });
-
-router.get("/:id", async (req, res) => {
-  const id = Number(req.params.id);
-
+router.get("/", async (req, res) => {
   try {
-    const resposta = await prisma.resposta.findUnique({
-      where: { id },
-      include: {
-        usuario: true,
-        pergunta: true,
+    const respostas = await prisma.resposta.findMany({
+      orderBy: {
+        createdAt: 'desc'
       },
+      select: {
+        id: true,
+        descricao: true,
+        createdAt: true,
+        usuario: {
+          select: {
+            nome: true
+          }
+        },
+        pergunta: {
+          select: {
+            titulo: true,
+            disciplinaId: true
+          }
+        }
+      }
     });
-
-    if (!resposta) {
-      res.status(404).json({ error: "Resposta não encontrada." });
-    }
-
-    res.json(resposta);
+    res.status(200).json(respostas);
   } catch (error) {
-    res.status(500).json({ error: "Erro ao buscar resposta." });
+    console.error("Erro ao buscar respostas:", error);
+    res.status(500).json({ error: "Erro ao buscar respostas." });
   }
 });
 
@@ -154,10 +131,8 @@ router.delete("/:respostaId/like", async (req, res) => {
         },
       },
     });
-    // A resposta é enviada sem 'return' na frente
     res.status(204).send();
   } catch (error: any) {
-    // P2025 é o código de erro do Prisma para "Registro a ser deletado não existe".
     if (error.code === 'P2025') {
        res.status(404).json({ error: "Like não encontrado para este usuário e resposta." });
     } else {

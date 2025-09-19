@@ -247,15 +247,15 @@ router.get("/:id/perguntas", async (req, res) => {
         usuarioId: usuarioId,
       },
       orderBy: {
-        createdAt: 'desc', // Mostra as mais recentes primeiro
+        createdAt: 'desc',
       },
       include: {
-        disciplina: { // Inclui o nome da disciplina para o link no frontend
+        disciplina: {
           select: {
             nome: true,
           }
         },
-        _count: { // Conta quantas respostas cada pergunta tem
+        _count: { 
           select: {
             respostas: true
           }

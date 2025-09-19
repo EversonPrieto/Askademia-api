@@ -94,7 +94,6 @@ router.get("/:id", async (req, res) => {
         respostas: {
           include: { 
             usuario: true,
-            // MODIFICAÇÃO AQUI TAMBÉM: Inclui os likes e a contagem
             likes: true,
              _count: {
               select: { likes: true }
@@ -105,7 +104,7 @@ router.get("/:id", async (req, res) => {
     });
     if (!pergunta) {
       res.status(404).json({ error: "Pergunta não encontrada." });
-    } else { // Adicionado um else para evitar enviar duas respostas
+    } else {
       res.json(pergunta);
     }
   } catch (error) {
