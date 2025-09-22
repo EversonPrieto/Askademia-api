@@ -19,7 +19,9 @@ enum TipoUsuario {
 model Usuario {
   id        Int      @id @default(autoincrement())
   nome      String
-  email     String   @unique
+  email     String
+  matricula String?  @unique
+  cpf       String?  @unique
   senha     String
   tipo      TipoUsuario @default(ALUNO)
   createdAt DateTime @default(now())
@@ -27,7 +29,7 @@ model Usuario {
 
   Pergunta Pergunta[]
   Resposta Resposta[]
-  likes    Like[] 
+  likes    Like[]
 
   @@map("usuarios")
 }

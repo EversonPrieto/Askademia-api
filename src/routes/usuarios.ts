@@ -46,7 +46,7 @@ function validaSenha(senha: string) {
 }
 
 router.post("/", async (req, res) => {
-  const { nome, email, senha } = req.body;
+  const { nome, email, senha, matricula, cpf } = req.body;
 
   if (!nome || !email || !senha) {
     res.status(400).json({ erro: "Informe nome, email e senha" });
@@ -59,12 +59,23 @@ router.post("/", async (req, res) => {
     return;
   }
 
+  if (!matricula && !cpf) {
+    res.status(400).json({ erro: "É necessário informar matrícula ou CPF para o cadastro." });
+    return;
+  }
+
   const salt = bcrypt.genSaltSync(12);
   const hash = bcrypt.hashSync(senha, salt);
 
   try {
     const usuario = await prisma.usuario.create({
-      data: { nome, email, senha: hash }
+      data: {
+        nome,
+        email,
+        senha: hash,
+        matricula: matricula || null,
+        cpf: cpf || null
+      }
     });
     res.status(201).json(usuario);
   } catch (error) {
@@ -73,17 +84,22 @@ router.post("/", async (req, res) => {
 });
 
 router.post("/login", async (req, res) => {
-  const { email, senha } = req.body;
+  const { identificador, senha } = req.body;
   const mensagemPadrao = "Login ou Senha incorretos";
 
-  if (!email || !senha) {
+  if (!identificador || !senha) {
     res.status(400).json({ erro: mensagemPadrao });
     return;
   }
 
   try {
-    const usuario = await prisma.usuario.findUnique({
-      where: { email }
+    const usuario = await prisma.usuario.findFirst({
+      where: {
+        OR: [
+          { matricula: identificador },
+          { cpf: identificador },
+        ],
+      },
     });
 
     if (usuario == null) {
@@ -150,7 +166,7 @@ router.patch("/:id/tipo", async (req, res) => {
 
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
-  const { nome, email, senha } = req.body;
+  const { nome, email, senha, matricula, cpf } = req.body;
 
   if (!nome || !email || !senha) {
     res.status(400).json({ erro: "Informe nome, email e senha" });
@@ -169,7 +185,13 @@ router.put("/:id", async (req, res) => {
   try {
     const usuario = await prisma.usuario.update({
       where: { id: Number(id) },
-      data: { nome, email, senha: hash }
+      data: { 
+        nome, 
+        email, 
+        senha: hash,
+        matricula: matricula, 
+        cpf: cpf            
+      }
     });
     res.status(200).json(usuario);
   } catch (error) {
@@ -197,13 +219,13 @@ router.get("/checaMonitor/:id", async (req, res) => {
     const usuario = await prisma.usuario.findUnique({
       where: { id: Number(id) },
       select: {
-        tipo: true 
+        tipo: true
       }
     });
 
     if (!usuario || (usuario.tipo !== TipoUsuario.MONITOR && usuario.tipo !== TipoUsuario.PROFESSOR)) {
       res.status(200).json(false);
-      return 
+      return
     }
 
     res.status(200).json(true);
@@ -221,13 +243,13 @@ router.get("/checaProfessor/:id", async (req, res) => {
     const usuario = await prisma.usuario.findUnique({
       where: { id: Number(id) },
       select: {
-        tipo: true 
+        tipo: true
       }
     });
 
     if (!usuario || usuario.tipo !== TipoUsuario.PROFESSOR) {
       res.status(200).json(false);
-      return 
+      return
     }
 
     res.status(200).json(true);
@@ -255,7 +277,7 @@ router.get("/:id/perguntas", async (req, res) => {
             nome: true,
           }
         },
-        _count: { 
+        _count: {
           select: {
             respostas: true
           }
