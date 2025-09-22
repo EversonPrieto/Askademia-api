@@ -31,30 +31,6 @@ router.post("/", upload.single('imagem'), async (req, res) => {
   }
 });
 
-// router.post("/", async (req, res) => {
-
-//   const { titulo, descricao, usuarioId, disciplinaId } = req.body;
-
-//   if (!titulo || !usuarioId || !disciplinaId) {
-//      res.status(400).json({ erro: "Título, ID do usuário e ID da disciplina são obrigatórios." })
-//      return;
-//   }
-
-//   try {
-//     const pergunta = await prisma.pergunta.create({
-//       data: {
-//         titulo,
-//         descricao: descricao || "",
-//         usuarioId,
-//         disciplinaId
-//       },
-//     });
-//     res.status(201).json(pergunta);
-//   } catch (error) {
-//     res.status(400).json({ error: "Erro ao criar pergunta. Verifique os dados fornecidos." });
-//   }
-// });
-
 router.get("/", async (req, res) => {
   try {
     const perguntas = await prisma.pergunta.findMany({
@@ -62,16 +38,22 @@ router.get("/", async (req, res) => {
         createdAt: 'desc',
       },
       include: {
-        usuario: true, 
+        usuario: { 
+          select: { id: true, nome: true, tipo: true }
+        },
+        _count: {
+          select: { likes: true }
+        },
         respostas: {
           orderBy: {
             createdAt: 'asc',
           },
           include: {
-            usuario: true,
-            likes: true,
-            _count: {
-              select: { likes: true } 
+            usuario: { 
+              select: { id: true, nome: true, tipo: true }
+            },
+            _count: { 
+              select: { likes: true }
             }
           },
         },
@@ -79,10 +61,11 @@ router.get("/", async (req, res) => {
     });
     res.json(perguntas);
   } catch (error) {
-    console.error("Erro detalhado ao buscar perguntas:", error); 
+    console.error("Erro detalhado ao buscar perguntas:", error);
     res.status(500).json({ error: "Erro ao buscar perguntas." });
   }
 });
+
 
 router.get("/:id", async (req, res) => {
   const id = Number(req.params.id);
@@ -91,11 +74,13 @@ router.get("/:id", async (req, res) => {
       where: { id },
       include: {
         usuario: true,
+        _count: {
+          select: { likes: true }
+        },
         respostas: {
-          include: { 
+          include: {
             usuario: true,
-            likes: true,
-             _count: {
+            _count: { 
               select: { likes: true }
             }
           }
@@ -135,6 +120,60 @@ router.delete("/:id", async (req, res) => {
     res.status(204).send();
   } catch (error) {
     res.status(400).json({ error: "Erro ao deletar pergunta." });
+  }
+});
+
+router.post("/:perguntaId/like", async (req, res) => {
+  const perguntaId = Number(req.params.perguntaId);
+  const { usuarioId } = req.body;
+
+  if (!usuarioId) {
+    res.status(400).json({ error: "O ID do usuário é obrigatório." });
+    return;
+  }
+
+  try {
+    const newLike = await prisma.likePergunta.create({
+      data: {
+        perguntaId,
+        usuarioId,
+      },
+    });
+    res.status(201).json(newLike);
+  } catch (error: any) {
+    if (error.code === 'P2002') {
+      res.status(409).json({ error: "Usuário já curtiu esta pergunta." });
+    } else {
+      res.status(400).json({ error: "Não foi possível adicionar o like. Verifique se a pergunta e o usuário existem." });
+    }
+  }
+});
+
+router.delete("/:perguntaId/like", async (req, res) => {
+  const perguntaId = Number(req.params.perguntaId);
+  const { usuarioId } = req.body;
+
+  if (!usuarioId) {
+    res.status(400).json({ error: "O ID do usuário é obrigatório." });
+    return;
+  }
+
+  try {
+    await prisma.likePergunta.delete({
+      where: {
+        usuarioId_perguntaId: {
+          usuarioId,
+          perguntaId,
+        },
+      },
+    });
+    res.status(204).send();
+  } catch (error: any) {
+    if (error.code === 'P2025') {
+       res.status(404).json({ error: "Like não encontrado para este usuário e pergunta." });
+    } else {
+       res.status(500).json({ error: "Erro ao remover o like." });
+    }
   }
 });
 

@@ -84,6 +84,7 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+
 router.get("/:id/perguntas", async (req, res) => {
   const disciplinaId = Number(req.params.id);
 
@@ -94,6 +95,13 @@ router.get("/:id/perguntas", async (req, res) => {
       },
       include: {
         usuario: true,
+        likes: true,
+        _count: {
+          select: {
+            likes: true,
+            respostas: true,
+          }
+        },
         respostas: {
           include: {
             usuario: true,
@@ -110,8 +118,8 @@ router.get("/:id/perguntas", async (req, res) => {
     });
     res.status(200).json(perguntas);
   } catch (error) {
+    console.error("Erro ao buscar perguntas da disciplina:", error);
     res.status(500).json({ error: "Erro ao buscar perguntas da disciplina." });
   }
 });
-
 export default router;

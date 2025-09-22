@@ -51,6 +51,11 @@ router.get("/", async (req, res) => {
             titulo: true,
             disciplinaId: true
           }
+        },
+        _count: {
+          select: {
+            likes: true
+          }
         }
       }
     });
@@ -97,7 +102,7 @@ router.post("/:respostaId/like", async (req, res) => {
   }
 
   try {
-    const newLike = await prisma.like.create({
+    const newLike = await prisma.likeResposta.create({
       data: {
         respostaId,
         usuarioId,
@@ -123,7 +128,7 @@ router.delete("/:respostaId/like", async (req, res) => {
   }
 
   try {
-    await prisma.like.delete({
+    await prisma.likeResposta.delete({
       where: {
         usuarioId_respostaId: {
           usuarioId,
