@@ -131,10 +131,10 @@ router.put("/:id", async (req, res) => {
 
 router.delete("/:id", async (req, res) => {
   const id = Number(req.params.id);
-  const { usuarioId } = req.body;
+  const { usuarioId, usuarioTipo } = req.body; 
 
-  if (!usuarioId) {
-    res.status(401).json({ error: "Acesso não autorizado. ID do usuário não fornecido." });
+  if (!usuarioId || !usuarioTipo) {
+    res.status(401).json({ error: "Acesso não autorizado." });
     return;
   }
 
@@ -145,11 +145,11 @@ router.delete("/:id", async (req, res) => {
       return;
     }
 
-    if (pergunta.usuarioId !== Number(usuarioId)) {
+    if (pergunta.usuarioId !== Number(usuarioId) && usuarioTipo !== 'PROFESSOR') {
       res.status(403).json({ error: "Você não tem permissão para deletar esta pergunta." });
       return;
     }
-
+    
     await prisma.pergunta.delete({ where: { id } });
     res.status(204).send();
   } catch (error) {
