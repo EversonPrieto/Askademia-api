@@ -87,34 +87,39 @@ router.delete("/:id", async (req, res) => {
 
 router.get("/:id/perguntas", async (req, res) => {
   const disciplinaId = Number(req.params.id);
-
+  
   try {
     const perguntas = await prisma.pergunta.findMany({
       where: {
         disciplinaId: disciplinaId,
       },
-      include: {
-        usuario: true,
-        likes: true,
-        _count: {
-          select: {
-            likes: true,
-            respostas: true,
+      orderBy: [
+        {
+          likes: {
+            _count: 'desc',
+          },
+        },
+        {
+          respostas: {
+            _count: 'desc',
           }
         },
+        {
+          createdAt: 'desc', 
+        },
+      ],
+      include: {
+        usuario: { select: { id: true, nome: true, tipo: true } },
+        likes: true,
+        _count: { select: { likes: true, respostas: true } },
         respostas: {
           include: {
-            usuario: true,
+            usuario: { select: { id: true, nome: true, tipo: true } },
             likes: true,
-            _count: {
-              select: { likes: true }
-            }
+            _count: { select: { likes: true } }
           },
-        }
+        },
       },
-      orderBy: {
-        createdAt: 'desc'
-      }
     });
     res.status(200).json(perguntas);
   } catch (error) {
@@ -122,4 +127,5 @@ router.get("/:id/perguntas", async (req, res) => {
     res.status(500).json({ error: "Erro ao buscar perguntas da disciplina." });
   }
 });
+
 export default router;

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
-import upload from '../config/cloudinary'; 
+import upload from '../config/cloudinary';
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -10,8 +10,8 @@ router.post("/", upload.single('imagem'), async (req, res) => {
   const imagemUrl = req.file?.path;
 
   if (!titulo || !usuarioId || !disciplinaId) {
-     res.status(400).json({ erro: "Título, ID do usuário e ID da disciplina são obrigatórios." })
-     return;
+    res.status(400).json({ erro: "Título, ID do usuário e ID da disciplina são obrigatórios." });
+    return;
   }
 
   try {
@@ -38,7 +38,7 @@ router.get("/", async (req, res) => {
         createdAt: 'desc',
       },
       include: {
-        usuario: { 
+        usuario: {
           select: { id: true, nome: true, tipo: true }
         },
         _count: {
@@ -49,10 +49,11 @@ router.get("/", async (req, res) => {
             createdAt: 'asc',
           },
           include: {
-            usuario: { 
+            usuario: {
               select: { id: true, nome: true, tipo: true }
             },
-            _count: { 
+            likes: true,
+            _count: {
               select: { likes: true }
             }
           },
@@ -65,7 +66,6 @@ router.get("/", async (req, res) => {
     res.status(500).json({ error: "Erro ao buscar perguntas." });
   }
 });
-
 
 router.get("/:id", async (req, res) => {
   const id = Number(req.params.id);
@@ -80,7 +80,8 @@ router.get("/:id", async (req, res) => {
         respostas: {
           include: {
             usuario: true,
-            _count: { 
+            likes: true,
+            _count: {
               select: { likes: true }
             }
           }
@@ -99,14 +100,30 @@ router.get("/:id", async (req, res) => {
 
 router.put("/:id", async (req, res) => {
   const id = Number(req.params.id);
-  const { titulo, descricao } = req.body;
+  const { titulo, descricao, usuarioId } = req.body;
+
+  if (!usuarioId) {
+    res.status(401).json({ error: "Acesso não autorizado. ID do usuário não fornecido." });
+    return;
+  }
 
   try {
-    const pergunta = await prisma.pergunta.update({
+    const pergunta = await prisma.pergunta.findUnique({ where: { id } });
+    if (!pergunta) {
+      res.status(404).json({ error: "Pergunta não encontrada." });
+      return;
+    }
+
+    if (pergunta.usuarioId !== Number(usuarioId)) {
+      res.status(403).json({ error: "Você não tem permissão para editar esta pergunta." });
+      return;
+    }
+
+    const perguntaAtualizada = await prisma.pergunta.update({
       where: { id },
       data: { titulo, descricao },
     });
-    res.json(pergunta);
+    res.json(perguntaAtualizada);
   } catch (error) {
     res.status(400).json({ error: "Erro ao atualizar pergunta." });
   }
@@ -114,8 +131,25 @@ router.put("/:id", async (req, res) => {
 
 router.delete("/:id", async (req, res) => {
   const id = Number(req.params.id);
+  const { usuarioId } = req.body;
+
+  if (!usuarioId) {
+    res.status(401).json({ error: "Acesso não autorizado. ID do usuário não fornecido." });
+    return;
+  }
 
   try {
+    const pergunta = await prisma.pergunta.findUnique({ where: { id } });
+    if (!pergunta) {
+      res.status(404).json({ error: "Pergunta não encontrada." });
+      return;
+    }
+
+    if (pergunta.usuarioId !== Number(usuarioId)) {
+      res.status(403).json({ error: "Você não tem permissão para deletar esta pergunta." });
+      return;
+    }
+
     await prisma.pergunta.delete({ where: { id } });
     res.status(204).send();
   } catch (error) {
@@ -136,16 +170,16 @@ router.post("/:perguntaId/like", async (req, res) => {
     const newLike = await prisma.likePergunta.create({
       data: {
         perguntaId,
-        usuarioId,
+        usuarioId: Number(usuarioId),
       },
     });
     res.status(201).json(newLike);
   } catch (error: any) {
     if (error.code === 'P2002') {
       res.status(409).json({ error: "Usuário já curtiu esta pergunta." });
-    } else {
-      res.status(400).json({ error: "Não foi possível adicionar o like. Verifique se a pergunta e o usuário existem." });
+      return
     }
+    res.status(400).json({ error: "Não foi possível adicionar o like." });
   }
 });
 
@@ -162,7 +196,7 @@ router.delete("/:perguntaId/like", async (req, res) => {
     await prisma.likePergunta.delete({
       where: {
         usuarioId_perguntaId: {
-          usuarioId,
+          usuarioId: Number(usuarioId),
           perguntaId,
         },
       },
@@ -170,10 +204,10 @@ router.delete("/:perguntaId/like", async (req, res) => {
     res.status(204).send();
   } catch (error: any) {
     if (error.code === 'P2025') {
-       res.status(404).json({ error: "Like não encontrado para este usuário e pergunta." });
-    } else {
-       res.status(500).json({ error: "Erro ao remover o like." });
+      res.status(404).json({ error: "Like não encontrado para este usuário e pergunta." });
+      return;
     }
+    res.status(500).json({ error: "Erro ao remover o like." });
   }
 });
 
