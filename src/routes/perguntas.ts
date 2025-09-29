@@ -1,9 +1,46 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import upload from '../config/cloudinary';
+import axios from 'axios';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const prisma = new PrismaClient();
 const router = Router();
+
+export async function isContentInappropriate(text: String) {
+  try {
+    const response = await axios.post(
+      "https://api.z.ai/api/paas/v4/chat/completions",
+      {
+        model: "GLM-4.5-Flash", // Or another suitable model from Z.AI
+        messages: [
+          {
+            role: "system",
+            content: "You are a content moderator. Your task is to determine if the following text contains any profanity, hate speech, or inappropriate content. Respond with 'yes' if it does, and 'no' if it does not."
+          },
+          {
+            role: "user",
+            content: text
+          }
+        ]
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.ZAI_API_KEY}`
+        }
+      }
+    );
+
+    const decision = response.data.choices[0].message.content.trim().toLowerCase();
+    return decision === 'yes';
+  } catch (error) {
+    console.error("Error calling Z.AI API:", error);
+    return false;
+  }
+}
 
 router.post("/", upload.single('imagem'), async (req, res) => {
   const { titulo, descricao, usuarioId, disciplinaId } = req.body;
@@ -11,6 +48,15 @@ router.post("/", upload.single('imagem'), async (req, res) => {
 
   if (!titulo || !usuarioId || !disciplinaId) {
     res.status(400).json({ erro: "Título, ID do usuário e ID da disciplina são obrigatórios." });
+    return;
+  }
+
+  const contentToCheck = `${titulo} ${descricao || ""}`;
+
+  const inappropriate = await isContentInappropriate(contentToCheck);
+
+  if (inappropriate) {
+    res.status(400).json({ erro: "A pergunta contém conteúdo impróprio e não pode ser postada." });
     return;
   }
 
@@ -28,42 +74,6 @@ router.post("/", upload.single('imagem'), async (req, res) => {
   } catch (error) {
     console.error("Erro ao criar pergunta:", error);
     res.status(400).json({ error: "Erro ao criar pergunta. Verifique os dados fornecidos." });
-  }
-});
-
-router.get("/", async (req, res) => {
-  try {
-    const perguntas = await prisma.pergunta.findMany({
-      orderBy: {
-        createdAt: 'desc',
-      },
-      include: {
-        usuario: {
-          select: { id: true, nome: true, tipo: true }
-        },
-        _count: {
-          select: { likes: true }
-        },
-        respostas: {
-          orderBy: {
-            createdAt: 'asc',
-          },
-          include: {
-            usuario: {
-              select: { id: true, nome: true, tipo: true }
-            },
-            likes: true,
-            _count: {
-              select: { likes: true }
-            }
-          },
-        },
-      },
-    });
-    res.json(perguntas);
-  } catch (error) {
-    console.error("Erro detalhado ao buscar perguntas:", error);
-    res.status(500).json({ error: "Erro ao buscar perguntas." });
   }
 });
 
@@ -131,7 +141,7 @@ router.put("/:id", async (req, res) => {
 
 router.delete("/:id", async (req, res) => {
   const id = Number(req.params.id);
-  const { usuarioId, usuarioTipo } = req.body; 
+  const { usuarioId, usuarioTipo } = req.body;
 
   if (!usuarioId || !usuarioTipo) {
     res.status(401).json({ error: "Acesso não autorizado." });
@@ -149,7 +159,7 @@ router.delete("/:id", async (req, res) => {
       res.status(403).json({ error: "Você não tem permissão para deletar esta pergunta." });
       return;
     }
-    
+
     await prisma.pergunta.delete({ where: { id } });
     res.status(204).send();
   } catch (error) {

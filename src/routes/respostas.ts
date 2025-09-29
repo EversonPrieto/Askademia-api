@@ -1,6 +1,11 @@
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import upload from '../config/cloudinary'; 
+import axios from 'axios';
+import dotenv from 'dotenv';
+import { isContentInappropriate } from "./perguntas";
+
+dotenv.config();
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -11,6 +16,14 @@ router.post("/", upload.single('imagem'), async (req, res) => {
 
   if (!descricao || !perguntaId || !usuarioId) {
     res.status(400).json({ error: "Descrição, ID da pergunta e ID do usuário são obrigatórios." });
+    return;
+  }
+
+  // Check for inappropriate content in the description
+  const inappropriate = await isContentInappropriate(descricao);
+
+  if (inappropriate) {
+    res.status(400).json({ erro: "A resposta contém conteúdo impróprio e não pode ser postada." });
     return;
   }
 
