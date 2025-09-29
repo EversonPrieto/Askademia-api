@@ -77,6 +77,43 @@ router.post("/", upload.single('imagem'), async (req, res) => {
   }
 });
 
+router.get("/", async (req, res) => {
+  try {
+    const perguntas = await prisma.pergunta.findMany({
+      orderBy: {
+        createdAt: 'desc',
+      },
+      include: {
+        usuario: {
+          select: { id: true, nome: true, tipo: true }
+        },
+        _count: {
+          select: { likes: true }
+        },
+        respostas: {
+          orderBy: {
+            createdAt: 'asc',
+          },
+          include: {
+            usuario: {
+              select: { id: true, nome: true, tipo: true }
+            },
+            likes: true,
+            _count: {
+              select: { likes: true }
+            }
+          },
+        },
+      },
+    });
+    res.json(perguntas);
+  } catch (error) {
+    console.error("Erro detalhado ao buscar perguntas:", error);
+    res.status(500).json({ error: "Erro ao buscar perguntas." });
+  }
+});
+
+
 router.get("/:id", async (req, res) => {
   const id = Number(req.params.id);
   try {
