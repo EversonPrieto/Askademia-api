@@ -33,6 +33,7 @@ model Usuario {
   likesPergunta LikePergunta[] 
 
   @@map("usuarios")
+  Denuncia Denuncia[]
 }
 
 model Disciplina {
@@ -60,6 +61,7 @@ model Pergunta {
   disciplinaId Int
   disciplina   Disciplina @relation(fields: [disciplinaId], references: [id])
   likes        LikePergunta[] 
+  denuncias    Denuncia[] 
 
   @@map("perguntas")
 }
@@ -76,6 +78,7 @@ model Resposta {
   usuarioId  Int
   usuario    Usuario  @relation(fields: [usuarioId], references: [id])
   likes      LikeResposta[] 
+  denuncias  Denuncia[]
 
   @@map("respostas")
 }
@@ -109,6 +112,34 @@ model LikePergunta {
   @@map("likes_perguntas")
 }
 
+enum MotivoDenuncia {
+  SPAM
+  ODIO
+  IMPROPRIO
+  OUTRO
+}
+
+enum StatusDenuncia {
+  PENDENTE
+  RESOLVIDO
+}
+
+model Denuncia {
+  id            Int            @id @default(autoincrement())
+  motivo        MotivoDenuncia
+  justificativa String?
+  status        StatusDenuncia @default(PENDENTE)
+  createdAt     DateTime       @default(now())
+
+  denuncianteId Int
+  denunciante   Usuario        @relation(fields: [denuncianteId], references: [id], onDelete: Cascade)
+  perguntaId    Int?
+  pergunta      Pergunta?      @relation(fields: [perguntaId], references: [id], onDelete: Cascade)
+  respostaId    Int?
+  resposta      Resposta?      @relation(fields: [respostaId], references: [id], onDelete: Cascade)
+
+  @@map("denuncias")
+}
 
 model Admin {
   id        Int      @id @default(autoincrement())

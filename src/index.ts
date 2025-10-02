@@ -5,6 +5,7 @@ import usuariosRouter from "./routes/usuarios";
 import perguntasRouter from "./routes/perguntas";
 import respostasRouter from "./routes/respostas";
 import displinasRouter from "./routes/disciplinas";
+import denunciasRouter from "./routes/denuncias";
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -20,6 +21,7 @@ app.use("/usuarios", usuariosRouter);
 app.use("/perguntas", perguntasRouter);
 app.use("/respostas", respostasRouter);
 app.use("/disciplinas", displinasRouter);
+app.use("/denuncias", denunciasRouter);
 
 
 app.get("/", (req, res) => {
