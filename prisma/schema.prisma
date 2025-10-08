@@ -24,6 +24,8 @@ model Usuario {
   cpf       String?  @unique
   senha     String
   tipo      TipoUsuario @default(ALUNO)
+  codigoRecuperacao   String?
+  codigoGeradoAt      DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
