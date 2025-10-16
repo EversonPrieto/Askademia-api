@@ -84,44 +84,60 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-
 router.get("/:id/perguntas", async (req, res) => {
   const disciplinaId = Number(req.params.id);
-  
+
+  const page = Number(req.query.page) || 1;
+  const pageSize = Number(req.query.pageSize) || 10;
+
+  const skip = (page - 1) * pageSize;
+
   try {
-    const perguntas = await prisma.pergunta.findMany({
-      where: {
-        disciplinaId: disciplinaId,
-      },
-      orderBy: [
-        {
-          likes: {
-            _count: 'desc',
+    const [perguntas, totalPerguntas] = await prisma.$transaction([
+      
+      prisma.pergunta.findMany({
+        where: { disciplinaId: disciplinaId },
+        skip: skip,
+        take: pageSize,
+        orderBy: [ 
+          {
+            likes: {
+              _count: 'desc',
+            },
           },
-        },
-        {
+          {
+            respostas: {
+              _count: 'desc',
+            }
+          },
+          {
+            createdAt: 'desc',
+          },
+        ],
+        include: {
+          usuario: { select: { id: true, nome: true, tipo: true } },
+          likes: true, 
+          _count: { select: { likes: true, respostas: true } }, 
           respostas: {
-            _count: 'desc',
-          }
-        },
-        {
-          createdAt: 'desc', 
-        },
-      ],
-      include: {
-        usuario: { select: { id: true, nome: true, tipo: true } },
-        likes: true,
-        _count: { select: { likes: true, respostas: true } },
-        respostas: {
-          include: {
-            usuario: { select: { id: true, nome: true, tipo: true } },
-            likes: true,
-            _count: { select: { likes: true } }
+            include: {
+              usuario: { select: { id: true, nome: true, tipo: true } },
+              likes: true, 
+              _count: { select: { likes: true } }
+            },
           },
         },
-      },
+      }),
+
+      prisma.pergunta.count({
+        where: { disciplinaId: disciplinaId },
+      }),
+    ]);
+
+    res.status(200).json({
+      perguntas,
+      totalPerguntas,
     });
-    res.status(200).json(perguntas);
+    
   } catch (error) {
     console.error("Erro ao buscar perguntas da disciplina:", error);
     res.status(500).json({ error: "Erro ao buscar perguntas da disciplina." });
