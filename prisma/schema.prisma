@@ -33,11 +33,11 @@ model Usuario {
   resposta      Resposta[]
   likesResposta LikeResposta[] 
   likesPergunta LikePergunta[] 
+  Denuncia      Denuncia[]
+  notificacoes  Notificacao[]
 
   @@map("usuarios")
-  Denuncia Denuncia[]
 }
-
 model Disciplina {
   id        Int      @id @default(autoincrement())
   nome      String   @unique
@@ -81,6 +81,7 @@ model Resposta {
   usuario    Usuario  @relation(fields: [usuarioId], references: [id])
   likes      LikeResposta[] 
   denuncias  Denuncia[]
+  notificacao Notificacao? 
 
   @@map("respostas")
 }
@@ -151,4 +152,20 @@ model Admin {
   updatedAt DateTime @updatedAt
 
   @@map("admins")
+}
+
+model Notificacao {
+  id        Int      @id @default(autoincrement())
+  mensagem  String
+  lida      Boolean  @default(false) 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  destinatarioId Int
+  destinatario   Usuario  @relation(fields: [destinatarioId], references: [id], onDelete: Cascade)
+
+  respostaId Int      @unique 
+  resposta   Resposta @relation(fields: [respostaId], references: [id], onDelete: Cascade)
+
+  @@map("notificacoes")
 }

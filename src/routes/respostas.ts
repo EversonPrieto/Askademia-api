@@ -19,7 +19,6 @@ router.post("/", upload.single('imagem'), async (req, res) => {
     return;
   }
 
-  // Check for inappropriate content in the description
   const inappropriate = await isContentInappropriate(descricao);
 
   if (inappropriate) {
@@ -28,17 +27,46 @@ router.post("/", upload.single('imagem'), async (req, res) => {
   }
 
   try {
-    const resposta = await prisma.resposta.create({
-      data: {
-        descricao,
-        perguntaId: Number(perguntaId),
-        usuarioId: Number(usuarioId),
-        imagemUrl: imagemUrl,
-      },
+    const [resposta] = await prisma.$transaction(async (tx) => {
+      const novaResposta = await tx.resposta.create({
+        data: {
+          descricao,
+          perguntaId: Number(perguntaId),
+          usuarioId: Number(usuarioId),
+          imagemUrl: imagemUrl,
+        },
+        include: {
+          usuario: {
+            select: { nome: true }
+          }
+        }
+      });
+
+      const pergunta = await tx.pergunta.findUnique({
+        where: { id: Number(perguntaId) },
+        select: { 
+          usuarioId: true,
+          titulo: true
+        }
+      });
+
+      if (pergunta && pergunta.usuarioId !== novaResposta.usuarioId) {
+        await tx.notificacao.create({
+          data: {
+            destinatarioId: pergunta.usuarioId,
+            respostaId: novaResposta.id,
+            mensagem: `Sua pergunta "${pergunta.titulo}" foi respondida por alguem!.`
+          }
+        });
+      }
+
+      return [novaResposta];
     });
+
     res.status(201).json(resposta);
+
   } catch (error) {
-    console.error("Erro ao criar resposta:", error);
+    console.error("Erro ao criar resposta e notificação:", error);
     res.status(400).json({ error: "Erro ao criar resposta. Verifique os dados fornecidos." });
   }
 });

@@ -6,6 +6,7 @@ import nodemailer from "nodemailer"
 const prisma = new PrismaClient();
 const router = Router();
 
+// Rota para listar todos os usuários
 router.get("/", async (req, res) => {
   try {
     const usuarios = await prisma.usuario.findMany();
@@ -15,6 +16,7 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Funcao para validacao de senha
 function validaSenha(senha: string) {
   const mensagens: string[] = [];
 
@@ -46,6 +48,7 @@ function validaSenha(senha: string) {
   return mensagens;
 }
 
+// Rota para criar um novo usuário
 router.post("/", async (req, res) => {
   const { nome, email, senha, matricula, cpf } = req.body;
 
@@ -84,6 +87,7 @@ router.post("/", async (req, res) => {
   }
 });
 
+// Rota para login de usuário
 router.post("/login", async (req, res) => {
   const { identificador, senha } = req.body;
   const mensagemPadrao = "Login ou Senha incorretos";
@@ -123,6 +127,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// Rota para buscar um usuário específico pelo ID
 router.get("/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -145,6 +150,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// Rota para alterar o tipo de um usuário
 router.patch("/:id/tipo", async (req, res) => {
   const { id } = req.params;
   const { tipo } = req.body;
@@ -165,6 +171,7 @@ router.patch("/:id/tipo", async (req, res) => {
   }
 });
 
+// Rota para atualizar os dados de um usuário
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
   const { nome, email, senha, matricula, cpf } = req.body;
@@ -200,6 +207,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
+// Rota para deletar um usuário
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -213,6 +221,7 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+// Rota para verificar se um usuário é MONITOR ou PROFESSOR
 router.get("/checaMonitor/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -237,6 +246,7 @@ router.get("/checaMonitor/:id", async (req, res) => {
   }
 });
 
+// Rota para verificar se um usuário é PROFESSOR
 router.get("/checaProfessor/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -261,6 +271,7 @@ router.get("/checaProfessor/:id", async (req, res) => {
   }
 });
 
+// Rota para listar todas as perguntas de um usuário específico
 router.get("/:id/perguntas", async (req, res) => {
   const usuarioId = Number(req.params.id);
 
@@ -291,6 +302,7 @@ router.get("/:id/perguntas", async (req, res) => {
   }
 });
 
+// Rota para solicitar a recuperação de senha
 router.post("/recuperar-senha", async (req, res) => {
   const { email } = req.body;
 
@@ -343,6 +355,7 @@ router.post("/recuperar-senha", async (req, res) => {
   }
 });
 
+// Rota para alterar a senha com um código de recuperação
 router.post("/alterar-senha", async (req, res) => {
   const { email, codigoRecuperacao, novaSenha } = req.body;
 
@@ -388,5 +401,67 @@ router.post("/alterar-senha", async (req, res) => {
   }
 });
 
+// Rota para buscar todas as notificações de um usuário
+router.get("/:id/notificacoes", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const notificacoes = await prisma.notificacao.findMany({
+      where: {
+        destinatarioId: Number(id),
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      include: {
+        resposta: {
+          include: {
+            usuario: {
+              select: {
+                nome: true,
+              },
+            },
+            pergunta: {
+              select: {
+                id: true,
+                titulo: true,
+                disciplina: { 
+                  select: {
+                    id: true,
+                  }
+                }
+              },
+            },
+          },
+        },
+      },
+    });
+
+    res.status(200).json(notificacoes);
+  } catch (error) {
+    console.error("Erro ao buscar notificações:", error);
+    res.status(500).json({ error: "Erro ao buscar as notificações do usuário." });
+  }
+});
+
+router.patch("/:id/lida", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const notificacaoAtualizada = await prisma.notificacao.update({
+      where: {
+        id: Number(id),
+      },
+      data: {
+        lida: true,
+      },
+    });
+
+    res.status(200).json(notificacaoAtualizada);
+  } catch (error) {
+    console.error("Erro ao marcar notificação como lida:", error);
+    res.status(500).json({ error: "Erro interno ao atualizar a notificação." });
+  }
+});
 
 export default router;
