@@ -291,7 +291,8 @@ router.get("/:id/perguntas", async (req, res) => {
         },
         _count: {
           select: {
-            respostas: true
+            respostas: true,
+            likes: true,
           }
         }
       }
@@ -302,7 +303,24 @@ router.get("/:id/perguntas", async (req, res) => {
   }
 });
 
-// Rota para solicitar a recuperação de senha
+router.get("/:id/respostas", async (req, res) => {
+  const usuarioId = Number(req.params.id);
+
+  try {
+    const respostas = await prisma.resposta.findMany({
+      where: {
+        usuarioId: usuarioId,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+    res.status(200).json(respostas);
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao buscar as respostas do usuário." });
+  }
+});
+
 router.post("/recuperar-senha", async (req, res) => {
   const { email } = req.body;
 
@@ -355,7 +373,6 @@ router.post("/recuperar-senha", async (req, res) => {
   }
 });
 
-// Rota para alterar a senha com um código de recuperação
 router.post("/alterar-senha", async (req, res) => {
   const { email, codigoRecuperacao, novaSenha } = req.body;
 
