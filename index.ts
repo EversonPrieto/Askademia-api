@@ -1,11 +1,11 @@
 import express from "express";
 import cors from "cors";
-import adminsRouter from "./routes/admins";
-import usuariosRouter from "./routes/usuarios";
-import perguntasRouter from "./routes/perguntas";
-import respostasRouter from "./routes/respostas";
-import displinasRouter from "./routes/disciplinas";
-import denunciasRouter from "./routes/denuncias";
+import adminsRouter from "./src/routes/admins";
+import usuariosRouter from "./src/routes/usuarios";
+import perguntasRouter from "./src/routes/perguntas";
+import respostasRouter from "./src/routes/respostas";
+import displinasRouter from "./src/routes/disciplinas";
+import denunciasRouter from "./src/routes/denuncias";
 import dotenv from 'dotenv';
 
 dotenv.config();
