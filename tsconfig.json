@@ -1,22 +1,13 @@
 {
   "compilerOptions": {
-    /* Language and Environment */
     "target": "ES2020",
-
-    /* Modules */
     "module": "commonjs",
-    "rootDir": "./src",                                /* Specify the root folder for your TypeScript files. */
-    "outDir": "./dist",                                /* Specify an output folder for all emitted JavaScript files. */
-    
-    /* Interop Constraints */
-    "esModuleInterop": true,                             /* Emit additional JavaScript to ease support for importing CommonJS modules. */
-    "forceConsistentCasingInFileNames": true,            /* Ensure that casing is correct in imports. */
-
-    /* Type Checking */
-    "strict": true,                                      /* Enable all strict type-checking options. */
-
-    /* Completeness */
-    "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true
   },
-  "include": ["src/**/*"] // Tells TypeScript to only look for files inside the 'src' directory.
+  "include": ["src/**/*"]
 }

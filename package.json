@@ -4,9 +4,9 @@
   "description": "To make it easy for you to get started with GitLab, here's a list of recommended next steps.",
   "main": "dist/index.js",
 "scripts": {
-"dev": "ts-node-dev src/index.ts",
-    "build": "tsc", 
-    "vercel-build": "prisma generate && tsc" 
+    "dev": "ts-node-dev src/index.ts",
+    "build": "tsc",
+    "vercel-build": "prisma generate && tsc"
 },
   "keywords": [],
   "author": "",

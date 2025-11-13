@@ -28,6 +28,4 @@ app.get("/", (req, res) => {
   res.send("API: Sistema Askademia - Q&A");
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-});
+export default app;
