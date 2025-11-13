@@ -4,7 +4,7 @@
   "description": "To make it easy for you to get started with GitLab, here's a list of recommended next steps.",
   "main": "index.js",
   "scripts": {
-    "dev": "npx ts-node-dev --respawn src/index.ts",
+    "dev": "npx ts-node-dev --respawn index.ts",
     "vercel-build": "npx prisma migrate deploy",
     "postinstall": "prisma generate"
   },
