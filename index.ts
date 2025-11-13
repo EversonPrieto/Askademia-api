@@ -23,7 +23,6 @@ app.use("/respostas", respostasRouter);
 app.use("/disciplinas", displinasRouter);
 app.use("/denuncias", denunciasRouter);
 
-
 app.get("/", (req, res) => {
   res.send("API: Sistema Askademia - Q&A");
 });
