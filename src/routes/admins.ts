@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 const prisma = new PrismaClient();
 const router = Router();
 
+
 function validaSenha(senha: string) {
   const mensagens: string[] = [];
 
