@@ -2,10 +2,11 @@
   "name": "api",
   "version": "1.0.0",
   "description": "To make it easy for you to get started with GitLab, here's a list of recommended next steps.",
-  "main": "index.js",
+  "main": "dist/index.js",
 "scripts": {
-  "dev": "npx ts-node-dev --respawn index.ts",
-  "vercel-build": "prisma generate"
+"dev": "ts-node-dev src/index.ts",
+    "build": "tsc", 
+    "vercel-build": "prisma generate && tsc" 
 },
   "keywords": [],
   "author": "",
